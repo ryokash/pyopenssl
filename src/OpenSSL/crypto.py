@@ -2918,6 +2918,44 @@ def verify(cert, signature, data, digest):
         _raise_current_error()
 
 
+def verify_file(cert, signature, file, digest, chunk_size=4096):
+    """
+    Verify a signature.
+
+    :param cert: signing certificate (X509 object)
+    :param signature: signature returned by sign function
+    :param file: file path or file like object to be verified
+    :param digest: message digest to use
+    :return: ``None`` if the signature is correct, raise exception otherwise.
+    """
+    if type(file) == str or type(file) == unicode:
+        file = open(file, 'rb')
+
+    digest_obj = _lib.EVP_get_digestbyname(_byte_string(digest))
+    if digest_obj == _ffi.NULL:
+        raise ValueError("No such digest method")
+
+    pkey = _lib.X509_get_pubkey(cert._x509)
+    _openssl_assert(pkey != _ffi.NULL)
+    pkey = _ffi.gc(pkey, _lib.EVP_PKEY_free)
+
+    md_ctx = _lib.Cryptography_EVP_MD_CTX_new()
+    md_ctx = _ffi.gc(md_ctx, _lib.Cryptography_EVP_MD_CTX_free)
+
+    _lib.EVP_VerifyInit(md_ctx, digest_obj)
+    while 1:
+        chunk = _text_to_bytes_and_warn("file", file.read(chunk_size))
+        if chunk == '':
+            break
+        _lib.EVP_VerifyUpdate(md_ctx, chunk, len(chunk))
+    verify_result = _lib.EVP_VerifyFinal(
+        md_ctx, signature, len(signature), pkey
+    )
+
+    if verify_result != 1:
+        _raise_current_error()
+
+
 def dump_crl(type, crl):
     """
     Dump a certificate revocation list to a buffer.
