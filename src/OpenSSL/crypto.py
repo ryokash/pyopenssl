@@ -57,6 +57,7 @@ __all__ = [
     'load_certificate_request',
     'sign',
     'verify',
+    'verify_file',
     'dump_crl',
     'load_crl',
     'load_pkcs7_data',
