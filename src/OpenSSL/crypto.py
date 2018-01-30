@@ -2926,6 +2926,7 @@ def verify_file(cert, signature, file, digest, chunk_size=4096):
     :param signature: signature returned by sign function
     :param file: file path or file like object to be verified
     :param digest: message digest to use
+    :param chunk_size: how many bytes to read at once
     :return: ``None`` if the signature is correct, raise exception otherwise.
     """
     if type(file) == str or type(file) == unicode:
